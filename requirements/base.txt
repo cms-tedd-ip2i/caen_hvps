@@ -1,0 +1,4 @@
+pyyaml>=6.0, <7.0.0
+pyserial>=3.2
+requests>=2.27.1, <2.28.0
+paho-mqtt>=1.5.1, <1.6.0
