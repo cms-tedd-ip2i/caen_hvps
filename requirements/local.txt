@@ -1,0 +1,9 @@
+-r ./base.txt
+black>=21.12b0, <23.0
+coverage>=6.3.1, <6.4.0
+pytest>=7.0.0, <8.0.0
+pytest-mock>=3.7.0, <3.8.0
+#toml>=0.10.2
+pydantic>=1.8.2
+pytest-cov == 2.5.1
+
