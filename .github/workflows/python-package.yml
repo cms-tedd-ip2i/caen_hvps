@@ -1,0 +1,66 @@
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Python package
+
+on:
+  #pull_request:
+  #  branches: [ main, dev ]
+  push:
+    branch : 'dev'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    # for self-hosted:
+    # runs-on: [self-hosted, linux, X64]
+    strategy:
+      matrix:
+        python-version: ["3.9.12", "3.10","3.11"]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Upgrade pip
+      run: | 
+        python3 -m pip install --upgrade pip
+        python3 -m pip --version
+    - name: Print environment
+      run: |
+        env
+    - name: Install dependencies
+      run: |
+        python3 -m pip install -r requirements/local.txt
+        python3 -m pip install -e .
+    
+    #- name: Docker-compose start mqtt 
+    #  run: | 
+    #    cd docker
+    #    pwd
+    #    echo "---------------------"
+    #    ls
+    #    echo $HOME
+    #    docker-compose up -d 
+    #    docker-compose ps -a
+    #    cd - 
+    - name: Run black --check .
+      run: black --check . --exclude _actions
+    #- name: Test with pytest
+    #  run: |
+    #    cd unittests
+    #    python3 -m pip install pytest-cov
+    #    python3 -m pytest --cov=../ --cov-report=xml
+    #    ls
+    #- name: Upload coverage to Codecov
+    #  uses: codecov/codecov-action@v3
+    #  with:
+    #    directory: ./unittests
+    #    env_vars: OS,PYTHON
+    #    fail_ci_if_error: true
+    #    flags: unittests
+    #    name: codecov-umbrella
+    #    # path_to_write_report: ./coverage/codecov_report.txt
+    #    verbose: true
+    
