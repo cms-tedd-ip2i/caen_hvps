@@ -34,6 +34,7 @@ class hvps_ctrl:
         self.channel_selected = args.channel_selected
         self.hvps_name = args.hvps_name
         self.iset_current = 0
+        self.vset_current = 0
         for mykey in self.config_dict.keys():
             if mykey.startswith('HVPS_'):
                 self.default_hvps_key = mykey
@@ -127,7 +128,9 @@ class hvps_ctrl:
                 if self.compare_voltage(my_new_bias_voltage) is True:  # Check if we need to actually change the voltage or if it is already set
                     self.HVPS[0].set_channel_param(self.hvps_name, self.my_slot, int(self.channel_selected), 'RUp', max_ramp_rate)  # Ensure the ramp up value is set to something safe
                     self.HVPS[0].set_channel_param(self.hvps_name, self.my_slot, int(self.channel_selected), 'RDwn', max_ramp_rate)  # Ensure the ramp up value is set to something safe
-                    self.HVPS[0].set_channel_param(self.hvps_name, self.my_slot, int(self.channel_selected), 'ISet', self.iset_current)  # Ensure we have 0 current set
+                    self.HVPS[0].set_channel_param(self.hvps_name, self.my_slot, int(self.channel_selected), 'I1Set', self.iset_current)  # Ensure we have 0 current set
+                    self.HVPS[0].set_channel_param(self.hvps_name, self.my_slot, int(self.channel_selected), 'V0Set', self.vset_current)  
+                    #self.HVPS[0].set_channel_param(self.hvps_name, self.my_slot, int(self.channel_selected), 'V1Set', self.vset_current)  # 
                     time.sleep(1)  # Sleep for a moment to make sure the setting has taken effect
                     self.HVPS[0].bias_channel(self.hvps_name, self.my_slot, int(self.channel_selected), int(my_new_bias_voltage))  # Bias the channel
             else:
@@ -155,6 +158,7 @@ def process_cli_args(args, config_dict):
 
     my_hvps_ctrl = hvps_ctrl(config_dict, args, my_slot)
     my_hvps_ctrl.iset_current = args.iset_current
+    my_hvps_ctrl.vset_current = args.vset_current
     if args.status == True:
         if args.channel_selected is None:
             my_hvps_ctrl.HVPS[0].status_all_channels(args.hvps_name)
@@ -216,7 +220,7 @@ def main():
                         help="Unbias channel specified with --chan #")
     parser.add_argument('--action', choices=('unbias', 'set_param'), required=False, default=None)
 
-    parser.add_argument('--param', dest='param', choices=('ISet', 'RUp', 'RDwn', 'Pon', 'Pw', 'TripInt', 'TripExt', 'PDwn', 'IMRange', 'Trip'),
+    parser.add_argument('--param', dest='param', choices=('I1Set', 'V0Set','RUp', 'RDwn', 'Pon', 'Pw', 'TripInt', 'TripExt', 'PDwn', 'IMRange', 'Trip'),
                         required=False, default=None,
                         help="Specify parameter to modify for channel, must specify with --action set_param")
     parser.add_argument('--param_value', dest='param_value', required=False, default=None,
@@ -224,10 +228,12 @@ def main():
     parser.add_argument('--bias', dest='bias_voltage', type=int, required=False, default=None,
                         help="Specify new bias voltage for a channel specified with --chan #")
     parser.add_argument('--iset_current', dest='iset_current', type=float, required=False, default=0.0,
-                        help="Specify current (ISET)")
+                        help="Specify current (I1SET)")
+    parser.add_argument('--vset_current', dest='vset_current', type=float, required=False, default=0.0,
+                        help="Specify current (VSET)")
     parser.add_argument('--slot', dest='slot_selected', type=int, required=False, default=None,
                         help="Specify slot to take action against")
-
+    
     parser.add_argument('--chan_enable', dest='chan_enable', required=False, type=int, default=None,
                         help="Specify channel to turn on")
     parser.add_argument('--chan_disable', dest='chan_disable', required=False, type=int, default=None,
