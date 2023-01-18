@@ -16,7 +16,7 @@ jobs:
     # runs-on: [self-hosted, linux, X64]
     strategy:
       matrix:
-        python-version: ["3.9.12", "3.10","3.11"]
+        python-version: [3.9.12]
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
@@ -35,16 +35,16 @@ jobs:
         python3 -m pip install -r requirements/local.txt
         python3 -m pip install -e .
     
-    #- name: Docker-compose start mqtt 
-    #  run: | 
-    #    cd docker
-    #    pwd
-    #    echo "---------------------"
-    #    ls
-    #    echo $HOME
-    #    docker-compose up -d 
-    #    docker-compose ps -a
-    #    cd - 
+    - name: Docker-compose start mqtt
+      run: | 
+        cd docker
+        pwd
+        echo "---------------------"
+        ls
+        echo $HOME
+      #  docker-compose up -d 
+      #  docker-compose ps -a
+        cd - 
     - name: Run black --check .
       run: black --check . --exclude _actions
     #- name: Test with pytest
