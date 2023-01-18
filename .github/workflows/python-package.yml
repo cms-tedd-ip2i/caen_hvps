@@ -35,16 +35,16 @@ jobs:
         python3 -m pip install -r requirements/local.txt
         python3 -m pip install -e .
     
-    #- name: Docker-compose start mqtt
-    #  run: | 
-    #    cd docker
-    #    pwd
-    #    echo "---------------------"
-    #    ls
-    #    echo $HOME
-    #    docker-compose up -d 
-    #    docker-compose ps -a
-    #    cd - 
+    - name: Docker-compose start mqtt
+      run: | 
+        cd docker/tedd_caen_hvps
+        pwd
+        echo "---------------------"
+        ls
+        echo $HOME
+        docker-compose up -d 
+        docker-compose ps -a
+        cd - 
     - name: Run black --check .
       run: black --check . --exclude _actions
     #- name: Test with pytest
