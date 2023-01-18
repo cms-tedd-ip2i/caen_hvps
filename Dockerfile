@@ -11,15 +11,6 @@ RUN yum install -y unzip
 RUN yum install -y java-11-openjdk java-11-openjdk-devel 
 RUN yum install -y wget
  
-
-#RUN apt-get update && apt-get install -y --no-install-recommends apt-utils
-
-#WORKDIR /usr/local/lib
-#COPY caenlib/CAENHVWrapper-6.3 ./CAENHVWrapper-6.3
-#WORKDIR /usr/local/lib/CAENHVWrapper-6.3/
-#RUN cd CAENHVWrapper-6.3/
-
-
 # install dependencies
 COPY requirements ./requirements
 
@@ -30,8 +21,8 @@ WORKDIR /usr/app/caenlib/
 RUN tar -xzf CAENHVWrapper-6.3.tgz
 RUN rm CAENHVWrapper-6.3.tgz
 
-RUN unzip CAEN_HVPSS_ChannelsController.zip
-RUN rm CAEN_HVPSS_ChannelsController.zip
+#RUN unzip CAEN_HVPSS_ChannelsController.zip
+#RUN rm CAEN_HVPSS_ChannelsController.zip
 
 WORKDIR /usr/app/caenlib/CAENHVWrapper-6.3/
 RUN pwd && ls
