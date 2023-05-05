@@ -3,10 +3,13 @@
 
 name: Python package
 on:
-  pull_request:
-    branches: [ main, dev ]
+  #pull_request:
+  #  branches: [ main, dev ]
+  push:
+    branches:
+      - 'dev'
   #push:
-  #  branch : 'dev'
+  #  branches : 'dev'
 
 jobs:
   build:
