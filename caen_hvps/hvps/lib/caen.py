@@ -25,8 +25,12 @@ from ctypes import (
 
 
 class CAEN_Controller:
-    def __init__(self, system_type, hostname, username, password, device_name, link_type=0):
-        self.MAX_CHANNEL_NAME_LENGHT = 12  # This is hardcoded at this time in the CAEN C-API
+    def __init__(
+        self, system_type, hostname, username, password, device_name, link_type=0
+    ):
+        self.MAX_CHANNEL_NAME_LENGHT = (
+            12  # This is hardcoded at this time in the CAEN C-API
+        )
         self.MAX_PARAM_LENGTH = 10  # this too is hardcoded and needed for nasty pointer indexing caused by the char ** they like to use
         self.PARAM_TYPE = {
             0: "numeric",
@@ -38,10 +42,14 @@ class CAEN_Controller:
             6: "enum",
         }
         try:
-            self.libcaenhvwrapper_so = cdll.LoadLibrary("libcaenhvwrapper.so")  # Load CAEN's c-api shared library
+            self.libcaenhvwrapper_so = cdll.LoadLibrary(
+                "libcaenhvwrapper.so"
+            )  # Load CAEN's c-api shared library
         except:
             print("Could not load CAEN's C library : libcaenhvwrapper.so")
-            print("It needs to be in in one of the directories listed in your LD_LIBRARY_PATH environment variable")
+            print(
+                "It needs to be in in one of the directories listed in your LD_LIBRARY_PATH environment variable"
+            )
             exit(1)
         self.device_name = device_name
         self.system_type = system_type
@@ -187,7 +195,9 @@ class CAEN_Controller:
         self.check_return_code(return_code)
 
         for channel_name in c_channel_names:
-            channel_names.append(channel_name.value.decode("utf-8"))  # append the name to a list
+            channel_names.append(
+                channel_name.value.decode("utf-8")
+            )  # append the name to a list
         return channel_names
 
     def get_all_info_for_channels(self, slot, channels):
@@ -221,8 +231,13 @@ class CAEN_Controller:
                 cast_param_value = 0
                 # Check what type of value we should be getting and cast the c_void_p accordingly
                 if my_parameter["type"] == "numeric":
-                    cast_param_value = cast(param_value, POINTER(c_float)).contents.value
-                elif my_parameter["type"] == "onoff" or my_parameter["type"] == "chstatus":
+                    cast_param_value = cast(
+                        param_value, POINTER(c_float)
+                    ).contents.value
+                elif (
+                    my_parameter["type"] == "onoff"
+                    or my_parameter["type"] == "chstatus"
+                ):
                     cast_param_value = cast(param_value, POINTER(c_int)).contents.value
                     # if (cast_param_value & (1<<n)):  # Checks if bit n is set to 1
 

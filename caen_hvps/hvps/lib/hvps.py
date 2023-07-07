@@ -69,7 +69,7 @@ class HVPS_Class:
             "unplugged": chstatus & (1 << 11),
             "overvoltage_protection": chstatus & (1 << 13),
             "power_fail": chstatus & (1 << 14),
-            "temp_error": chstatus & (1 << 15)
+            "temp_error": chstatus & (1 << 15),
         }
         return chstatus_dict
 
@@ -83,7 +83,11 @@ class HVPS_Class:
             hvps_entry = self.hvps_systems_objects_list[0]
         else:
             hvps_entry = next(
-                (hvps_entry for hvps_entry in self.hvps_systems_objects_list if hvps_entry.device_name == hvps_name),
+                (
+                    hvps_entry
+                    for hvps_entry in self.hvps_systems_objects_list
+                    if hvps_entry.device_name == hvps_name
+                ),
                 None,
             )
         return hvps_entry
@@ -99,8 +103,12 @@ class HVPS_Class:
             "SLOT:",
             slot,
         )
-        hvps_entry.set_channel_parameter(slot, channel, "Pw", 1)  # Enable the channel first
-        hvps_entry.set_channel_parameter(slot, channel, "VSet", bias_voltage)  # Then set the voltage
+        hvps_entry.set_channel_parameter(
+            slot, channel, "Pw", 1
+        )  # Enable the channel first
+        hvps_entry.set_channel_parameter(
+            slot, channel, "VSet", bias_voltage
+        )  # Then set the voltage
 
     def set_channel_param(self, hvps_name, slot, channel, param, param_value):
         # set_channel_param: Sets the channel parameter such as RUp, RDown, ISet, etc..
@@ -160,15 +168,27 @@ class HVPS_Class:
                     for my_status_code in status_code_dict:
                         if status_code_dict[my_status_code] >= 1:
                             # We can have multiple channel status messages, I think...
-                            my_status = (my_status + my_status_code + ",")
+                            my_status = my_status + my_status_code + ","
                 else:
                     try:
-                    
-                        channel_status_result["chan_info"].append({"parameter": channel_dict["chan_info"][counter]["parameter"]})
-                        channel_status_result["chan_info"][counter]["parameter"] = channel_dict["chan_info"][counter]["parameter"]
-                        channel_status_result["chan_info"].append({"value": channel_dict["chan_info"][counter]["value"]})
-                        channel_status_result["chan_info"][counter]["value"] = channel_dict["chan_info"][counter]["value"]
-                    
+
+                        channel_status_result["chan_info"].append(
+                            {
+                                "parameter": channel_dict["chan_info"][counter][
+                                    "parameter"
+                                ]
+                            }
+                        )
+                        channel_status_result["chan_info"][counter][
+                            "parameter"
+                        ] = channel_dict["chan_info"][counter]["parameter"]
+                        channel_status_result["chan_info"].append(
+                            {"value": channel_dict["chan_info"][counter]["value"]}
+                        )
+                        channel_status_result["chan_info"][counter][
+                            "value"
+                        ] = channel_dict["chan_info"][counter]["value"]
+
                         print(
                             channel_dict["chan_info"][counter]["parameter"],
                             ":",
@@ -177,31 +197,30 @@ class HVPS_Class:
                         )
                     except IndexError:
                         pass
-                counter +=1 
+                counter += 1
             if my_status == "":
                 my_status = "Off"
             print("Status :", my_status)
             channel_status_result["status"]: my_status
-            #channel_status_result["chan_info"]["parameter"] =  channel_dict["chan_info"][0]["parameter"]
-            #channel_status_result["chan_info"]["value"] =  f"{channel_dict["chan_info"][0]['value']:.1f}"
-            #channel_status_result["chan_info"]["value"] =  channel_dict["chan_info"][0]['value']
+            # channel_status_result["chan_info"]["parameter"] =  channel_dict["chan_info"][0]["parameter"]
+            # channel_status_result["chan_info"]["value"] =  f"{channel_dict["chan_info"][0]['value']:.1f}"
+            # channel_status_result["chan_info"]["value"] =  channel_dict["chan_info"][0]['value']
             return channel_status_result
-                   
-                
-                #else:
-                #    channel_status_result["chan_info"]["parameter"] = channel_params["parameter"]
-                #    channel_status_result["chan_info"]["value"] = f"{channel_params['value']:.1f}"
-                #    print(
-                #        channel_params["parameter"],
-                #        ":",
-                #        f"{channel_params['value']:.1f}",
-                #        end=" | ",
-                #    )
-            #if my_status == "":
+
+            # else:
+            #    channel_status_result["chan_info"]["parameter"] = channel_params["parameter"]
+            #    channel_status_result["chan_info"]["value"] = f"{channel_params['value']:.1f}"
+            #    print(
+            #        channel_params["parameter"],
+            #        ":",
+            #        f"{channel_params['value']:.1f}",
+            #        end=" | ",
+            #    )
+            # if my_status == "":
             #    my_status = "Off"
-            #print("Status :", my_status)
-            #channel_status_result["status"]: my_status
-            #return channel_status_result
+            # print("Status :", my_status)
+            # channel_status_result["status"]: my_status
+            # return channel_status_result
 
     def status_channel(self, hvps_name, slot, channel):
         # status_channel: Get the parameters and values for an individual channel
@@ -238,7 +257,9 @@ class HVPS_Class:
         for my_crate in crate_info_list:  # Loop over all the crates
             list_of_channel_names = []
             hvps_entry = self.get_object_entry_for_hvps_by_name(my_crate["device_name"])
-            for my_slot in range(0, my_crate["num_of_slots"]):  # Loop over all the slots in the crates
+            for my_slot in range(
+                0, my_crate["num_of_slots"]
+            ):  # Loop over all the slots in the crates
                 list_of_channel_names.extend(
                     hvps_entry.get_channel_names(
                         my_slot, list(range(0, my_crate["num_of_channels"]))
@@ -270,13 +291,19 @@ class HVPS_Class:
         channel_status_list = []
         if hvps_name is not None:
             hvps_entry = next(
-                (hvps_entry for hvps_entry in self.hvps_systems_objects_list if hvps_entry.device_name == hvps_name),
+                (
+                    hvps_entry
+                    for hvps_entry in self.hvps_systems_objects_list
+                    if hvps_entry.device_name == hvps_name
+                ),
                 None,
             )
             if hvps_entry is None:
                 print("Could not find HVPS name:", hvps_name)
                 exit(1)
-            channel_status_list.append(self.get_all_crate_channel_statuses(hvps_entry))  # List of dict's
+            channel_status_list.append(
+                self.get_all_crate_channel_statuses(hvps_entry)
+            )  # List of dict's
         else:
             for my_hvps in self.hvps_systems_objects_list:
                 channel_status_list.append(

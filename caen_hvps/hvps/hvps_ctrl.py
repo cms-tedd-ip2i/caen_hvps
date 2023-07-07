@@ -15,9 +15,11 @@ from os.path import exists
 
 from configobj import ConfigObj
 
-from lib.hvps import HVPS_Class  # Class that contains high level wrapper functions for the HVPS,
+from lib.hvps import (
+    HVPS_Class,
+)  # Class that contains high level wrapper functions for the HVPS,
 
-#import mqtt as my_mqtt
+# import mqtt as my_mqtt
 import paho.mqtt.client as mqtt
 
 # *************************************************************************************
@@ -43,8 +45,8 @@ class hvps_ctrl:
         if len(self.HVPS) == 0:
             print("Could not find HVPS entry in config file.")
             exit(1)
-        #self.force = self.args.force
-        self.force = getattr(args, 'force', False)
+        # self.force = self.args.force
+        self.force = getattr(args, "force", False)
         self.channel_entry = (
             self.find_channel_in_config()
         )  # Get the config entry for channel
@@ -99,15 +101,17 @@ class hvps_ctrl:
         # find_channel_in_config: Checks that there is a config entry for the channel before taking action on it and confirms if the channel is enabled
         my_config_dict = self.config_dict[self.default_hvps_key]
         channel_entry = None
-        #for my_channel_key in my_config_dict.keys():
+        # for my_channel_key in my_config_dict.keys():
         #    if my_channel_key.startswith("CH_"):
         #        if(my_config_dict[my_channel_key]["chan_num"]==str(self.channel_selected) ) and my_config_dict[my_channel_key]["Enabled"].upper()=="True".upper():
         #            channel_entry = my_config_dict[my_channel_key]
-        #return channel_entry
+        # return channel_entry
         for key, val in my_config_dict.items():
             if key.startswith("CH_"):
                 # If channel exists in config file AND it is marked as ENABLED
-                if (val["chan_num"] == str(self.channel_selected)) and (val["Enabled"].upper() == "TRUE"):
+                if (val["chan_num"] == str(self.channel_selected)) and (
+                    val["Enabled"].upper() == "TRUE"
+                ):
                     channel_entry = val
         return channel_entry  # Return the dict for the specified channel
 
@@ -257,8 +261,8 @@ def process_cli_args(args, config_dict):
                 args.hvps_name, my_slot, args.channel_selected
             )
             # TODO: check if it is true
-            #msg = my_hvps_ctrl.HVPS[0].show_channel_status(channel_status_list)
-            #print("status channels ===== " , msg)
+            # msg = my_hvps_ctrl.HVPS[0].show_channel_status(channel_status_list)
+            # print("status channels ===== " , msg)
 
     elif args.bias_voltage != None:
         my_hvps_ctrl.bias()
@@ -311,15 +315,18 @@ def process_config_file_configobj(config_file="hvps.cfg"):
         print("Please specify using --config <config file name>")
         exit(1)
 
+
 parser = argparse.ArgumentParser(
-        description="HVPS Controller",
-        usage="%(prog)s --action [bias, unbias, status, set_name] --chan [channel num]",
-    )
+    description="HVPS Controller",
+    usage="%(prog)s --action [bias, unbias, status, set_name] --chan [channel num]",
+)
+
+
 def main():
-    #parser = argparse.ArgumentParser(
+    # parser = argparse.ArgumentParser(
     #    description="HVPS Controller",
     #    usage="%(prog)s --action [bias, unbias, status, set_name] --chan [channel num]",
-    #)
+    # )
     parser.add_argument("--hvps_name", dest="hvps_name", default=None, required=False)
     parser.add_argument(
         "--status",
@@ -335,7 +342,9 @@ def main():
         required=False,
         help="Unbias channel specified with --chan #",
     )
-    parser.add_argument("--action", choices=("unbias", "set_param"), required=False, default=None)
+    parser.add_argument(
+        "--action", choices=("unbias", "set_param"), required=False, default=None
+    )
 
     parser.add_argument(
         "--param",
@@ -440,43 +449,43 @@ def main():
     )
 
     args, unknown = parser.parse_known_args()
-    #print("args==", args)
+    # print("args==", args)
     config_dict = process_config_file_configobj(args.config_file)
     process_cli_args(args, config_dict)
-
-
 
 
 def on_connect(client, userdata, flags, rc):
     # Subscribing in on_connect() means that if we lose the connection and
     # reconnect then subscriptions will be renewed.
-    #client.subscribe(f"/{client.device.name}/cmd/#")
+    # client.subscribe(f"/{client.device.name}/cmd/#")
     client.subscribe("/SY4527/status/#")
-    #client.subscribe(f"/{my_hvps_ctrl.hvps_name}/cmd/#")
+    # client.subscribe(f"/{my_hvps_ctrl.hvps_name}/cmd/#")
     """Mqtt client on connect method"""
     if rc == 0:
         print("Connected to MQTT Broker!")
     else:
         print("Failed to connect, return code %d\n", rc)
 
+
 def on_message(client, userdata, msg):
     """Subscribed topic on message action"""
-    #print("recv", msg.topic, msg.payload)
-    #client.device.command(msg.topic, msg.payload)
+    # print("recv", msg.topic, msg.payload)
+    # client.device.command(msg.topic, msg.payload)
     print("RECEIVE message:")
     print("Topic: " + msg.topic, msg.payload.decode())
 
 
 def run(device, mqtt_host):
     import json
+
     client = mqtt.Client()
     client.on_connect = on_connect
     client.on_message = on_message
-    
+
     client.device = device
     client.connect(mqtt_host, 1883, 60)
-    #config_dict = process_config_file_configobj(config_file="hvps.cfg")
-    #print("config ", config_dict)
+    # config_dict = process_config_file_configobj(config_file="hvps.cfg")
+    # print("config ", config_dict)
     args, unknown = parser.parse_known_args()
     config_dict = process_config_file_configobj(args.config_file)
 
@@ -488,8 +497,7 @@ def run(device, mqtt_host):
     my_hvps_ctrl = hvps_ctrl(config_dict, args, my_slot)
     my_hvps_ctrl.iset_current = args.iset_current
     my_hvps_ctrl.vset_current = args.vset_current
-    #client.subscribe(f"/{my_hvps_ctrl.hvps_name}/status/#")
-   
+    # client.subscribe(f"/{my_hvps_ctrl.hvps_name}/status/#")
 
     if args.status == True:
         if args.channel_selected is None:
@@ -506,32 +514,32 @@ def run(device, mqtt_host):
         channel_info = msg["chan_info"]
 
     client.loop_start()
-    topic ='/SY4527/status'
+    topic = "/SY4527/status"
     client.subscribe(topic)
     while 1:
         formatted_msg = f"Message:\nSlot: {slot} | Channel Name: {channel_name} | Channel#: {channel_number} | "
-        #formatted_msg = "Message:\n"
+        # formatted_msg = "Message:\n"
         for item in channel_info:
             if "parameter" in item and "value" in item:
                 parameter = item["parameter"]
                 value = item["value"]
                 formatted_msg += f"{parameter}: {value} | "
-        
+
         client.publish(topic, str(formatted_msg))
         print(f"SEND `{formatted_msg}` to topic `{topic}`")
-        #client.publish("/{}/status".format(my_hvps_ctrl.hvps_name), json.dumps(msg))
-        #client.publish(topic,json.dumps(msg))
-        #print(f"SEND `{msg}` to topic `{topic}`")
-       
+        # client.publish("/{}/status".format(my_hvps_ctrl.hvps_name), json.dumps(msg))
+        # client.publish(topic,json.dumps(msg))
+        # print(f"SEND `{msg}` to topic `{topic}`")
+
         time.sleep(4)
     time.sleep(4)
     client.loop_stop()
     client.disconnect()
 
+
 if __name__ == "__main__":
     main()
-    #mqtt_host = "docker.for.mac.host.internal" 
-    mqtt_host = "lyovis12.in2p3.fr" #or with hostaname:mqtt_host = "lyovis12.in2p3.fr" 
-    #mqtt_port = 1883
+    # mqtt_host = "docker.for.mac.host.internal"
+    mqtt_host = "lyovis12.in2p3.fr"  # or with hostaname:mqtt_host = "lyovis12.in2p3.fr"
+    # mqtt_port = 1883
     run(hvps_ctrl, mqtt_host)
-  
