@@ -7,6 +7,8 @@
 #   CAEN manaul and c-api : https://www.caen.it/products/caen-hv-wrapper-library/
 # *************************************************************************************
 
+import socket
+import sys
 from ctypes import (
     c_int,
     c_float,
@@ -20,19 +22,11 @@ from ctypes import (
     POINTER,
     byref,
 )
-from pprint import pprint
-import socket
-import time
-import sys
 
 
 class CAEN_Controller:
-    def __init__(
-        self, system_type, hostname, username, password, device_name, link_type=0
-    ):
-        self.MAX_CHANNEL_NAME_LENGHT = (
-            12  # This is hardcoded at this time in the CAEN C-API
-        )
+    def __init__(self, system_type, hostname, username, password, device_name, link_type=0):
+        self.MAX_CHANNEL_NAME_LENGHT = 12  # This is hardcoded at this time in the CAEN C-API
         self.MAX_PARAM_LENGTH = 10  # this too is hardcoded and needed for nasty pointer indexing caused by the char ** they like to use
         self.PARAM_TYPE = {
             0: "numeric",
@@ -44,14 +38,10 @@ class CAEN_Controller:
             6: "enum",
         }
         try:
-            self.libcaenhvwrapper_so = cdll.LoadLibrary(
-                "libcaenhvwrapper.so"
-            )  # Load CAEN's c-api shared library
+            self.libcaenhvwrapper_so = cdll.LoadLibrary("libcaenhvwrapper.so")  # Load CAEN's c-api shared library
         except:
             print("Could not load CAEN's C library : libcaenhvwrapper.so")
-            print(
-                "It needs to be in in one of the directories listed in your LD_LIBRARY_PATH environment variable"
-            )
+            print("It needs to be in in one of the directories listed in your LD_LIBRARY_PATH environment variable")
             exit(1)
         self.device_name = device_name
         self.system_type = system_type
@@ -67,8 +57,7 @@ class CAEN_Controller:
         except:
             print("Could not get the IP address for the hostname :%s", (hostname))
             print("Or the IP address is improperly formatted")
-        self.handle = 0
-        self.handle = c_int()
+        self.handle = c_int(0)
         print("Initilizing HVPS...")
         self.init()
 
@@ -121,6 +110,7 @@ class CAEN_Controller:
             print(
                 "Something didn't go well with de-init'ing, I wish I could tell you more but it's probably not the end of the world."
             )
+            return_code = 1  # different from 0
         return return_code
 
     def get_channel_paramters(self, slot, channel):
@@ -139,14 +129,13 @@ class CAEN_Controller:
         self.check_return_code(return_code)
         # print("parameter num  :",c_channel_params_num)
 
-        num_parameters_for_channel = c_channel_params_num[
-            0
-        ]  # This is an array and even using only one channel here have to treat it as such
+        # This is an array and even using only one channel here have to treat it as such
+        num_parameters_for_channel = c_channel_params_num[0]
+
         channel_parameter_list = []
-        for i in range(
-            0, num_parameters_for_channel - 1
-        ):  # For this we must do weird pointer indexing
-            parameter_dict = {}
+
+        # For this we must do weird pointer indexing
+        for i in range(0, num_parameters_for_channel - 1):
             pointer_to_param = cast(c_channel_info_list, c_void_p).value + (
                 i * self.MAX_PARAM_LENGTH
             )  # So we cast to type void_p then incriment the pointer value to move to the next actual value
@@ -169,9 +158,9 @@ class CAEN_Controller:
             self.check_return_code(return_code)
 
             my_property_type = 0
-            if (
-                property_type.value is not None
-            ):  # I don't know why it comes out as None instead of 0 but whatever..
+
+            # I don't know why it comes out as None instead of 0 but whatever..
+            if property_type.value is not None:
                 my_property_type = property_type.value
             # Set a dict with the parameter name and value type and value and then go ahead and append it to a list of dict's
             parameter_dict = {
@@ -198,9 +187,7 @@ class CAEN_Controller:
         self.check_return_code(return_code)
 
         for channel_name in c_channel_names:
-            channel_names.append(
-                channel_name.value.decode("utf-8")
-            )  # append the name to a list
+            channel_names.append(channel_name.value.decode("utf-8"))  # append the name to a list
         return channel_names
 
     def get_all_info_for_channels(self, slot, channels):
@@ -208,15 +195,12 @@ class CAEN_Controller:
         #                             of dicts containing all the information for the channels
         all_channels_info_list = []
         for my_channel in channels:  # loop over all the channels
-            full_channel_parameters_list = []
-            channel_info_dict = {}
-            channel_name = self.get_channel_names(
-                slot, [my_channel]
-            )  # Might as well grab the channel name, wonder what it'll be...
+            # Might as well grab the channel name, wonder what it'll be...
+            channel_name = self.get_channel_names(slot, [my_channel])
 
-            full_channel_parameters_list = self.get_channel_paramters(
-                slot, my_channel
-            )  # get list of all available parameters
+            # get list of all available parameters
+            full_channel_parameters_list = self.get_channel_paramters(slot, my_channel)
+
             # Iterate over all the parameters to get all the values, yes there is a little code redundency here but you can fix it ;)
             for my_parameter in full_channel_parameters_list:
                 c_channels_list = (c_ushort * 1)(
@@ -235,16 +219,10 @@ class CAEN_Controller:
                 self.check_return_code(return_code)
 
                 cast_param_value = 0
-                if (
-                    my_parameter["type"] == "numeric"
-                ):  # Check what type of value we should be getting and cast the c_void_p accordingly
-                    cast_param_value = cast(
-                        param_value, POINTER(c_float)
-                    ).contents.value
-                elif (
-                    my_parameter["type"] == "onoff"
-                    or my_parameter["type"] == "chstatus"
-                ):
+                # Check what type of value we should be getting and cast the c_void_p accordingly
+                if my_parameter["type"] == "numeric":
+                    cast_param_value = cast(param_value, POINTER(c_float)).contents.value
+                elif my_parameter["type"] == "onoff" or my_parameter["type"] == "chstatus":
                     cast_param_value = cast(param_value, POINTER(c_int)).contents.value
                     # if (cast_param_value & (1<<n)):  # Checks if bit n is set to 1
 

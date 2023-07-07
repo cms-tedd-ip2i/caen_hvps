@@ -6,10 +6,9 @@
 #            unless one needs direct access to the hardware which should be unusual.
 # *************************************************************************************
 
-from lib.caen import (
-    CAEN_Controller as CC,
-)  # This is my low level wrapper for the actual C-Api
-from pprint import pprint
+# This is my low level wrapper for the actual C-Api
+from lib.caen import CAEN_Controller as CC
+
 
 # *************************************************************************************
 # HVPS_Channel
@@ -50,60 +49,41 @@ class HVPS_Class:
         for hvps_device in self.hvps_systems_objects_list:
             hvps_device.deinit()
 
-    def decode_chstatus(self, chstatus):
+    @staticmethod
+    def decode_chstatus(chstatus):
         # decode_chstatus: Fun with binary, the chstatus comes in the form of a binary number with each position in the
         #                  sequence that is a 1 represents a different status.  Such as 0b0000000000001 would read as 0 bit is 1
         #                  which would indicate that the channel is ON
         chstatus_dict = {
-            "on": 0,
-            "rup": 0,
-            "rdown": 0,
-            "overcurrent": 0,
-            "overvoltage": 0,
-            "undervoltage": 0,
-            "ext_trip": 0,
-            "maxv": 0,
-            "ext_disable": 0,
-            "int_trip": 0,
-            "inhibit_trip": 0,
-            "unplugged": 0,
-            "overvoltage_protection": 0,
-            "power_fail": 0,
-            "temp_error": 0,
+            "on": chstatus & (1 << 0),
+            "rup": chstatus & (1 << 1),
+            "rdown": chstatus & (1 << 2),
+            "overcurrent": chstatus & (1 << 3),
+            "overvoltage": chstatus & (1 << 4),
+            "undervoltage": chstatus & (1 << 5),
+            "ext_trip": chstatus & (1 << 6),
+            "maxv": chstatus & (1 << 7),
+            "ext_disable": chstatus & (1 << 8),
+            "int_trip": chstatus & (1 << 9),
+            "inhibit_trip": chstatus & (1 << 10),
+            "unplugged": chstatus & (1 << 11),
+            "overvoltage_protection": chstatus & (1 << 13),
+            "power_fail": chstatus & (1 << 14),
+            "temp_error": chstatus & (1 << 15)
         }
-        chstatus_dict["on"] = chstatus & (1 << 0)  # bit 0
-        chstatus_dict["rup"] = chstatus & (1 << 1)  # bit 1
-        chstatus_dict["rdown"] = chstatus & (1 << 2)  # bit 2
-        chstatus_dict["overcurrent"] = chstatus & (1 << 3)  # bit 3
-        chstatus_dict["overvoltage"] = chstatus & (1 << 4)  # bit 4
-        chstatus_dict["undervoltage"] = chstatus & (1 << 5)  # bit 5
-        chstatus_dict["ext_trip"] = chstatus & (1 << 6)  # bit 6
-        chstatus_dict["maxv"] = chstatus & (1 << 7)  # bit 7
-        chstatus_dict["ext_disable"] = chstatus & (1 << 8)  # bit 8
-        chstatus_dict["int_trip"] = chstatus & (1 << 9)  # bit 9
-        chstatus_dict["inhibit_trip"] = chstatus & (1 << 10)  # bit 10
-        chstatus_dict["unplugged"] = chstatus & (1 << 11)  # bit 11
-        chstatus_dict["overvoltage_protection"] = chstatus & (1 << 13)  # bit 13
-        chstatus_dict["power_fail"] = chstatus & (1 << 14)  # bit 14
-        chstatus_dict["temp_error"] = chstatus & (1 << 15)  # bit 15
-
         return chstatus_dict
 
     def get_object_entry_for_hvps_by_name(self, hvps_name):
         # get_object_entry_for_hvps_by_name: Runs though the object list looking for an HVPS with the name and
         #                                    returns that object.  Keep in mind that I didn't not complete all the work
         #                                    on supporting multiple HVPS's but quite a bit of it is in here.
-        if (
-            len(self.hvps_systems_objects_list) == 1 and hvps_name is None
-        ):  # If we have only one, the normal case, just return the first item
+
+        # If we have only one, the normal case, just return the first item
+        if (len(self.hvps_systems_objects_list) == 1) and (hvps_name is None):
             hvps_entry = self.hvps_systems_objects_list[0]
         else:
             hvps_entry = next(
-                (
-                    hvps_entry
-                    for hvps_entry in self.hvps_systems_objects_list
-                    if hvps_entry.device_name == hvps_name
-                ),
+                (hvps_entry for hvps_entry in self.hvps_systems_objects_list if hvps_entry.device_name == hvps_name),
                 None,
             )
         return hvps_entry
@@ -111,7 +91,6 @@ class HVPS_Class:
     def bias_channel(self, hvps_name, slot, channel, bias_voltage):
         # bias_channel: You guessed it, this allows us to specify a channel and what voltage we would like to set it at
         hvps_entry = self.get_object_entry_for_hvps_by_name(hvps_name)
-
         print(
             "BIAS - DEVICE:",
             hvps_entry.device_name,
@@ -120,12 +99,8 @@ class HVPS_Class:
             "SLOT:",
             slot,
         )
-        hvps_entry.set_channel_parameter(
-            slot, channel, "Pw", 1
-        )  # Enable the channel first
-        hvps_entry.set_channel_parameter(
-            slot, channel, "VSet", bias_voltage
-        )  # Then set the voltage
+        hvps_entry.set_channel_parameter(slot, channel, "Pw", 1)  # Enable the channel first
+        hvps_entry.set_channel_parameter(slot, channel, "VSet", bias_voltage)  # Then set the voltage
 
     def set_channel_param(self, hvps_name, slot, channel, param, param_value):
         # set_channel_param: Sets the channel parameter such as RUp, RDown, ISet, etc..
@@ -166,29 +141,67 @@ class HVPS_Class:
     def show_channel_status(self, channel_status_list):
         # show_channel_status: Display all the parameter values for channels passed to it
         for channel_dict in channel_status_list[0]:
+            channel_status_result = {
+                "slot": channel_dict["slot"],
+                "chan_name": channel_dict["chan_name"],
+                "chan_num": channel_dict["chan_num"],
+                "chan_info": {},
+            }
             my_status = ""
             print("Slot:", channel_dict["slot"], end=" | ")
             print("Channel Name:", channel_dict["chan_name"], end=" | ")
             print("Channel#:", channel_dict["chan_num"], end=" | ")
+            counter = 0
+            channel_status_result["chan_info"] = []
             for channel_params in channel_dict["chan_info"]:
                 if channel_params["parameter"] == "Status":
                     # Attempt to decode the channel status, I'm not sure if this is working correctly
                     status_code_dict = self.decode_chstatus(channel_params["value"])
                     for my_status_code in status_code_dict:
                         if status_code_dict[my_status_code] >= 1:
-                            my_status = (
-                                my_status + my_status_code + ","
-                            )  # We can have multiple channel status messages, I think...
+                            # We can have multiple channel status messages, I think...
+                            my_status = (my_status + my_status_code + ",")
                 else:
-                    print(
-                        channel_params["parameter"],
-                        ":",
-                        f"{channel_params['value']:.1f}",
-                        end=" | ",
-                    )
+                    try:
+                    
+                        channel_status_result["chan_info"].append({"parameter": channel_dict["chan_info"][counter]["parameter"]})
+                        channel_status_result["chan_info"][counter]["parameter"] = channel_dict["chan_info"][counter]["parameter"]
+                        channel_status_result["chan_info"].append({"value": channel_dict["chan_info"][counter]["value"]})
+                        channel_status_result["chan_info"][counter]["value"] = channel_dict["chan_info"][counter]["value"]
+                    
+                        print(
+                            channel_dict["chan_info"][counter]["parameter"],
+                            ":",
+                            channel_dict["chan_info"][counter]["value"],
+                            end=" | ",
+                        )
+                    except IndexError:
+                        pass
+                counter +=1 
             if my_status == "":
                 my_status = "Off"
             print("Status :", my_status)
+            channel_status_result["status"]: my_status
+            #channel_status_result["chan_info"]["parameter"] =  channel_dict["chan_info"][0]["parameter"]
+            #channel_status_result["chan_info"]["value"] =  f"{channel_dict["chan_info"][0]['value']:.1f}"
+            #channel_status_result["chan_info"]["value"] =  channel_dict["chan_info"][0]['value']
+            return channel_status_result
+                   
+                
+                #else:
+                #    channel_status_result["chan_info"]["parameter"] = channel_params["parameter"]
+                #    channel_status_result["chan_info"]["value"] = f"{channel_params['value']:.1f}"
+                #    print(
+                #        channel_params["parameter"],
+                #        ":",
+                #        f"{channel_params['value']:.1f}",
+                #        end=" | ",
+                #    )
+            #if my_status == "":
+            #    my_status = "Off"
+            #print("Status :", my_status)
+            #channel_status_result["status"]: my_status
+            #return channel_status_result
 
     def status_channel(self, hvps_name, slot, channel):
         # status_channel: Get the parameters and values for an individual channel
@@ -222,13 +235,10 @@ class HVPS_Class:
         # get_all_channel_names: Loops over all HVPS's and gets the channel names for them all
         full_list_of_channel_names = []
         crate_info_list = self.get_all_crates_info()  # Get all the crates
-        device_and_channel_dict = {}
         for my_crate in crate_info_list:  # Loop over all the crates
             list_of_channel_names = []
             hvps_entry = self.get_object_entry_for_hvps_by_name(my_crate["device_name"])
-            for my_slot in range(
-                0, my_crate["num_of_slots"]
-            ):  # Loop over all the slots in the crates
+            for my_slot in range(0, my_crate["num_of_slots"]):  # Loop over all the slots in the crates
                 list_of_channel_names.extend(
                     hvps_entry.get_channel_names(
                         my_slot, list(range(0, my_crate["num_of_channels"]))
@@ -242,7 +252,8 @@ class HVPS_Class:
             full_list_of_channel_names.append(device_and_channel_dict)
         return full_list_of_channel_names
 
-    def get_all_crate_channel_statuses(self, my_hpvs_crate):
+    @staticmethod
+    def get_all_crate_channel_statuses(my_hpvs_crate):
         # get_all_crate_channel_statuses: big aggragate function that tries to get all the channel info for every configured HVPS
         channel_status_list = []
         crate_info_dict = my_hpvs_crate.get_crate_info()
@@ -259,19 +270,13 @@ class HVPS_Class:
         channel_status_list = []
         if hvps_name is not None:
             hvps_entry = next(
-                (
-                    hvps_entry
-                    for hvps_entry in self.hvps_systems_objects_list
-                    if hvps_entry.device_name == hvps_name
-                ),
+                (hvps_entry for hvps_entry in self.hvps_systems_objects_list if hvps_entry.device_name == hvps_name),
                 None,
             )
             if hvps_entry is None:
                 print("Could not find HVPS name:", hvps_name)
                 exit(1)
-            channel_status_list.append(
-                self.get_all_crate_channel_statuses(hvps_entry)
-            )  # List of dict's
+            channel_status_list.append(self.get_all_crate_channel_statuses(hvps_entry))  # List of dict's
         else:
             for my_hvps in self.hvps_systems_objects_list:
                 channel_status_list.append(
