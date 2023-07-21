@@ -1,6 +1,5 @@
-#FROM centos:centos7
-#for Mac m1 --> 
-FROM  --platform=linux/amd64 centos:centos7
+FROM centos:centos7
+#for Mac m1 --> FROM  --platform=linux/amd64 centos:centos7
 
 # Update packages and install tools 
 
@@ -20,7 +19,6 @@ COPY caen_hvps/hvps .
 
 # install dependencies
 COPY requirements ./requirements
-
 RUN python3 -m pip install --no-cache-dir -r requirements/docker.txt
 
 COPY caen_hvps/caenlib ./caenlib
@@ -28,26 +26,16 @@ WORKDIR /usr/app/caen_hvps/caenlib/
 RUN tar -xzf CAENHVWrapper-6.3.tgz
 RUN rm CAENHVWrapper-6.3.tgz
 
-#WORKDIR /usr/app/caen_hvps/caenlib/CAENHVWrapper-6.3/
-#RUN pwd && ls
-
-#RUN ./install.sh
-#RUN rm *.txt
-#RUN rm -rf HVWrapperDemo/
-#RUN pwd && ls
-
 WORKDIR /usr/app/caen_hvps/caenlib/CAENHVWrapper-6.3/
 RUN ./install.sh && \
     rm *.txt && \
     rm -rf HVWrapperDemo/
 
+#WORKDIR /usr/lib
+#CMD pwd && ls
+#RUN ldconfig -l libcaenhvwrapper.so.6.3
+#RUN export LD_LIBRARY_PATH="/usr/lib"
 
-#ENV LD_LIBRARY_PATH="/usr/lib"
-
-WORKDIR /usr/lib
-CMD pwd && ls
-RUN ldconfig -l libcaenhvwrapper.so.6.3
-RUN export LD_LIBRARY_PATH="/usr/lib"
 ENV LD_LIBRARY_PATH="/usr/lib"
 
 WORKDIR /usr/app/caen_hvps/
