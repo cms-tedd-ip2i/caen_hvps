@@ -1,5 +1,6 @@
 FROM centos:centos7
-#for Mac m1 --> FROM  --platform=linux/amd64 centos:centos7
+#for Mac m1 --> 
+#FROM  --platform=linux/amd64 centos:centos7
 
 # Update packages and install tools 
 

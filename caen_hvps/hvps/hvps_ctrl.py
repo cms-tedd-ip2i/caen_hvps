@@ -305,7 +305,7 @@ def process_cli_args(args, config_dict):
     return
 
 
-def process_config_file_configobj(config_file="hvps.cfg"):
+'''def process_config_file_configobj(config_file="hvps.cfg"):
     # process_config_file_configobj: Using ConfigObj to process config file into nested dict's
     if exists(config_file):
         config_dict = ConfigObj(config_file)  # Change this to config_file after testing
@@ -313,9 +313,62 @@ def process_config_file_configobj(config_file="hvps.cfg"):
     else:
         print("Could not open config file:", config_file)
         print("Please specify using --config <config file name>")
-        exit(1)
+        exit(1)'''
 
+def process_config_file_configobj(config_file=None):
+    # process_config_file_configobj: Using ConfigObj to process config file into nested dict's
+    if config_file is not None and exists(config_file):
+        config_dict = ConfigObj(config_file)
+        print(f"Using config file: {config_file}")
+        for section, section_value in config_dict.items():
+            if isinstance(section_value, dict):
+                print(f"[{section}]")
+                for key, value in section_value.items():
+                    print(f"{key} = {value}")
+            else:
+                print(f"{section} = {section_value}")
+    else:
+        # Default configuration in case the config file is not provided or doesn't exist
+        config_dict = {
+            "default_slot": "0",
+            "default_hvps":"HVPS_SY4527",
+            "HVPS_SY4527": {
+                "device_name": "SY4527",
+                "system_type": "2",
+                "link_type": "0",
+                "hostname": "192.168.1.210",
+                "username":"admin",
+                "password" : "admin",
+            },
 
+            # Add more default configuration entries as needed
+        }
+        print("No config file provided or config file does not exist. Using default configuration.")
+        print("Default Configuration:")
+        for section, section_value in config_dict.items():
+            if isinstance(section_value, dict):
+                print(f"[{section}]")
+                for key, value in section_value.items():
+                    print(f"{key} = {value}")
+            else:
+                print(f"{section} = {section_value}")
+    return config_dict
+#jandan added this function to print all channels status
+def print_all_channel_status(self):
+        for channel_num in range(1, 33):  # Assuming there are 32 channels in total
+            channel_status_list = self.HVPS[0].status_channel(
+                self.hvps_name, self.my_slot, channel_num
+            )
+            if channel_status_list:
+                channel_info = channel_status_list[0][0]["chan_info"]
+                print(f"Channel {channel_num} Status:")
+                for item in channel_info:
+                    if "parameter" in item and "value" in item:
+                        parameter = item["parameter"]
+                        value = item["value"]
+                        print(f"  {parameter}: {value}")
+            else:
+                print(f"Channel {channel_num} not found or not enabled in the config.")
 parser = argparse.ArgumentParser(
     description="HVPS Controller",
     usage="%(prog)s --action [bias, unbias, status, set_name] --chan [channel num]",
@@ -502,6 +555,7 @@ def run(device, mqtt_host):
     if args.status == True:
         if args.channel_selected is None:
             my_hvps_ctrl.HVPS[0].status_all_channels(args.hvps_name)
+            #my_hvps_ctrl.print_all_channel_status() #to print all channels status
         else:
             channel_status_list = my_hvps_ctrl.HVPS[0].status_channel(
                 args.hvps_name, my_slot, args.channel_selected
@@ -539,7 +593,7 @@ def run(device, mqtt_host):
 
 if __name__ == "__main__":
     main()
-    # mqtt_host = "docker.for.mac.host.internal"
+    # mqtt_host = "docker.for.mac.host.internal" # if you are working locally
     mqtt_host = "lyovis12.in2p3.fr"  # or with hostaname:mqtt_host = "lyovis12.in2p3.fr"
     # mqtt_port = 1883
     run(hvps_ctrl, mqtt_host)

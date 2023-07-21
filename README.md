@@ -48,21 +48,21 @@ The installation copies and installs the library in /usr/lib, and installs it in
 ### Dockerfile
 Create an image and Install all the necessary tools.
 
-#### Running
-To create an image:
+#### Build Docker image
     
-    docker build -t centos:caen_hvps_test .
+    docker build -t tedd_caen_hvps:centos7 .
     
     
-To run the image as a container:
+##### To run the image as a container:
 
-    docker run --platform linux/amd64 -it --name=caen_hvps centos:caen_hvps_test bash
+    docker run -it --name=caen_hvps tedd_caen_hvps:centos7 bash
         
 
-To run the python file inside the container:
-check the status of the channel 0 :
+###### To run the python file inside the container:
 
-    hvps_ctrl.py --status  --chan 0
+1- To check the status of the specific channel e.g: channel 0 :
+
+    python3 hvps_ctrl.py --status  --chan 0
            
          
 You will see the following statement:
@@ -75,5 +75,23 @@ You will see the following statement:
     Slot: 4 | Channel Name: LV_1-0 | Channel#: 0 | V0Set : 5.0 | I0Set : 1.1 | RUpTime : 100.0 | RDwTime : 100.0 | Trip : 0.1 | UNVThr : 0.0 | OVVThr : 7.0 | VMon : 0.0 | VCon : 0.4 | IMon : 0.0 | Temp : 0.0 | Pw : 0.0 | TripInt : 0.0 | TripExt : 0.0 | ChToGroup : 0.0 | OnGrDel : 0.0 | Status : Off
         
 
+2- Other parameters: V0Set / RumpDown / Rump Up / Trip / etc.:
 
+    --param V0Set:
+
+    python3 hvps_ctrl.py --action set_param --param V0Set --param_value 6 --chan 1
+
+    --param RDWn:
+
+    python3 hvps_ctrl.py --action set_param --param RDWn --param_value 40 --chan 0
+
+    --param RUp:
+    
+    python3 hvps_ctrl.py --action set_param --param RUp --param_value 50 --chan 0
+
+
+    --param Trip:
+
+    python3 hvps_ctrl.py --action set_param --param Trip --param_value 0.5 --chan 0
      
+
